@@ -199,7 +199,7 @@ const createExecutor = config => {
         .catch(onError || (err => {
           throw err;
         })),
-        _.defaults(config.options.consumer || {
+        _.defaults(config.queue.options.consumer || {
           durable: false,
           autoDelete: true,
           messageTtl: 5000
