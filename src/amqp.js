@@ -1,5 +1,5 @@
 'use strict';
-const debug = require('debug')('mq-node-rabbitmq');
+const debug = require('debug')('mq-node-amqp');
 const EventEmitter = require('events');
 const amqplib = require('amqplib');
 const Promise = require('bluebird');

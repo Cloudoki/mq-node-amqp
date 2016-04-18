@@ -1,12 +1,12 @@
-# mq-node-rabbitmq
+# mq-node-amqp
 
-Message Queue Layer for Node.JS over RabbitMQ
+Message Queue Layer for Node.JS over AMQP
 
 ### Requirements
 
 - node: >5.10
 - npm: >3.3
-- RabbitMQ: >3.6.1
+- RabbitMQ: >3.6.1 (or equivalent AMQP broker)
 
 #### Install dependencies
 
