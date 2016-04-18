@@ -116,10 +116,9 @@ const createCaller = config => {
   }).then(queue => {
     debug('queue created');
     caller.queue = queue;
-    caller.call = payload => Promise.resolve(payload).then(() => {
-      payload.id = cuid();
-      payload.ts = new Date().toISOString();
-
+    caller.call = payload => Promise.resolve().then(() => {
+      payload.id = payload.id || cuid();
+      payload.ts = payload.ts || new Date().toISOString();
       debug('call', payload);
       const msg = JSON.stringify(payload);
       return queue.request(msg);
