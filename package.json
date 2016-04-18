@@ -1,5 +1,5 @@
 {
-  "name": "mq-node-rabbitmq",
+  "name": "mq-node-amqp",
   "version": "0.1.0",
   "main": "src/amqp.js",
   "engines": {
