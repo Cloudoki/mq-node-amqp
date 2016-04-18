@@ -184,22 +184,27 @@ const createExecutor = config => {
 
     executor.listen = (handler, onError) =>
       executor.channel.consume(config.queue.name || 'rpc',
-        msg => Promise.resolve(executor.channel.ack(msg))
-        .then(() => {
-          const data = JSON.parse(msg.content.toString());
-          debug('consume', data);
-          return data;
-        }).then(handler)
-        .then(reply => {
-          debug('reply', reply);
-          return executor.channel.sendToQueue(msg.properties.replyTo,
-          new Buffer(JSON.stringify(reply || {})),
-          buildEmitterOptions(msg));
-        })
-        .catch(onError || (err => {
-          throw err;
-        })),
-        _.defaults(config.queue.options.consumer || {
+        msg => {
+          let payload;
+          return Promise.resolve(executor.channel.ack(msg))
+          .then(() => {
+            payload = JSON.parse(msg.content.toString());
+            debug('consume', payload);
+            return payload;
+          }).then(handler)
+          .then(response => {
+            const reply = response || {};
+            reply.id = reply.id || payload.id;
+            reply.pts = reply.pts || payload.ts;
+            reply.rts = reply.rts || new Date().toISOString();
+            debug('reply', reply);
+            return executor.channel.sendToQueue(msg.properties.replyTo,
+            new Buffer(JSON.stringify(reply)),
+            buildEmitterOptions(msg));
+          }).catch(onError || (err => {
+            throw err;
+          }));
+        }, _.defaults(config.queue.options.consumer || {
           durable: false,
           autoDelete: true,
           messageTtl: 5000

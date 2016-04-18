@@ -14,8 +14,7 @@ describe('amqp', () => {
       operation: 'test',
       message: 'test message'
     }).then(reply => {
-      const now = new Date().getTime();
-      assert(now - new Date(reply.payload.ts) < 100);
+      assert(new Date(reply.rts) - new Date(reply.pts) < 100);
       expect(reply.result).to.equal('test executed');
       cb();
     }));
@@ -24,8 +23,7 @@ describe('amqp', () => {
       queue: {
         name: 'rpc_test'
       }
-    }).then(executor => executor.listen(payload => ({
-      payload,
+    }).then(executor => executor.listen(() => ({
       result: 'test executed'
     })));
   });
