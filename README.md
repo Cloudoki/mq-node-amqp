@@ -44,3 +44,13 @@ You can use `http-server` for that:
 npm install -g http-server
 http-server
 ```
+
+#### Debugging
+
+For debugging this module you can use the debug `mq-node-amqp` DEBUG environment variable.
+
+`DEBUG=mq-node-amqp`
+
+As long as your are not doing a compute intensive task to produce the object to debug
+you may leave the debug statment there since it will be converted to noop function
+(`() => ()`) if not in debugging mode and shouldn't affect performance.
