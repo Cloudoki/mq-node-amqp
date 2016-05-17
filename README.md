@@ -162,9 +162,6 @@ As long as your are not doing a compute intensive task to produce the object to 
 you may leave the debug statment there since it will be converted to noop function
 (`() => ()`) if not in debugging mode and shouldn't affect performance.
 
-
-Coverage reports will be generated at `./coverage`
-
 ## Testing and Coverage
 
 - [mocha](https://mochajs.org/)
@@ -173,6 +170,8 @@ Coverage reports will be generated at `./coverage`
 ```
 npm run test -s
 ```
+
+Coverage reports will be generated at `./coverage`
 
 ## Linting check
 
