@@ -42,8 +42,7 @@ const createReqResQueue = (ch, name, options) => {
     msg => events.emit(msg.properties.correlationId || 'msg', msg),
     _.defaults(_opts.consumer || {}, {
       noAck: true
-    }))
-  );
+    })));
 
   return Promise.join(requestQueue, responseQueue, consumer, (req, res) => ({
     name,
@@ -65,7 +64,8 @@ const createReqResQueue = (ch, name, options) => {
       const reply = new Promise(resolve => {
         listener = resolve;
         events.once(corr, resolve);
-      }).timeout(_opts.timeout || 5000, corr + ' response timed out');
+      }).timeout(_opts.timeout || 5000, corr +
+        ' response timed out');
 
       reply.catch(Promise.TimeoutError, () =>
         events.removeListener(corr, listener));
@@ -88,46 +88,46 @@ const createCaller = config => {
   if (!config.queue) {
     config.queue = {};
   }
-  return createConnection(config.connection || { url: 'amqp://localhost'})
-  .then(conn => {
-    debug('connection created');
-    caller.connection = conn;
-    caller.close = conn.close.bind(conn);
-    return createChannel(conn);
-  }).then(chn => {
-    debug('channel created');
-    caller.channel = chn;
-    return createReqResQueue(
-      chn,
-      config.queue.name || 'rpc',
-      config.queue.options || {
-        consumer: {
-          durable: false,
-          autoDelete: true,
-          messageTtl: 5000
-        },
-        request: {
-          durable: false,
-          autoDelete: true,
-          messageTtl: 5000
-        },
-        timeout: 5000
-      });
-  }).then(queue => {
-    debug('queue created');
-    caller.queue = queue;
-    caller.call = payload => Promise.resolve().then(() => {
-      payload.id = payload.id || cuid();
-      payload.ts = payload.ts || new Date().toISOString();
-      debug('call', payload);
-      const msg = JSON.stringify(payload);
-      return queue.request(msg);
-    }).then(reply =>
-      JSON.parse(reply.content.toString())
-    );
-    debug('caller created');
-    return caller;
-  });
+  return createConnection(config.connection || { url: 'amqp://localhost' })
+    .then(conn => {
+      debug('connection created');
+      caller.connection = conn;
+      caller.close = conn.close.bind(conn);
+      return createChannel(conn);
+    }).then(chn => {
+      debug('channel created');
+      caller.channel = chn;
+      return createReqResQueue(
+        chn,
+        config.queue.name || 'rpc',
+        config.queue.options || {
+          consumer: {
+            durable: false,
+            autoDelete: true,
+            messageTtl: 5000
+          },
+          request: {
+            durable: false,
+            autoDelete: true,
+            messageTtl: 5000
+          },
+          timeout: 5000
+        });
+    }).then(queue => {
+      debug('queue created');
+      caller.queue = queue;
+      caller.call = payload => Promise.resolve().then(() => {
+        payload.id = payload.id || cuid();
+        payload.ts = payload.ts || new Date().toISOString();
+        debug('call', payload);
+        const msg = JSON.stringify(payload);
+        return queue.request(msg);
+      }).then(reply =>
+        JSON.parse(reply.content.toString())
+      );
+      debug('caller created');
+      return caller;
+    });
 };
 
 /*
@@ -148,73 +148,73 @@ const createExecutor = config => {
   if (!config.queue.options) {
     config.queue.options = {};
   }
-  return createConnection(config.connection || { url: 'amqp://localhost'})
-  .then(conn => {
-    debug('connection created');
-    executor.connection = conn;
-    executor.close = conn.close.bind(conn);
-    return createChannel(conn);
-  }).then(chn => {
-    executor.channel = chn;
-    debug('channel created');
-    return chn.prefetch(config.prefetch || 10);
-  }).then(() => createSimpleQueue(
-    executor.channel,
-    config.queue.name || 'rpc',
-    config.queue.options.request || {
-      durable: false,
-      autoDelete: true,
-      messageTtl: 5000
-    })
-  ).then(() => {
-    debug('rpc queue asserted');
-    const emitterOptions = _.defaults(config.queue.options.emitter || {
-      durable: false,
-      autoDelete: true,
-      messageTtl: 5000
-    }, {
-      noAck: true
-    });
-    const buildEmitterOptions = msg => {
-      const options = _.clone(emitterOptions);
-      options.correlationId = msg.properties.correlationId;
-      debug('listen: ' + options.correlationId);
-      return options;
-    };
+  return createConnection(config.connection || { url: 'amqp://localhost' })
+    .then(conn => {
+      debug('connection created');
+      executor.connection = conn;
+      executor.close = conn.close.bind(conn);
+      return createChannel(conn);
+    }).then(chn => {
+      executor.channel = chn;
+      debug('channel created');
+      return chn.prefetch(config.prefetch || 10);
+    }).then(() => createSimpleQueue(
+      executor.channel,
+      config.queue.name || 'rpc',
+      config.queue.options.request || {
+        durable: false,
+        autoDelete: true,
+        messageTtl: 5000
+      }))
+    .then(() => {
+      debug('rpc queue asserted');
+      const emitterOptions = _.defaults(config.queue.options.emitter || {
+        durable: false,
+        autoDelete: true,
+        messageTtl: 5000
+      }, {
+        noAck: true
+      });
+      const buildEmitterOptions = msg => {
+        const options = _.clone(emitterOptions);
+        options.correlationId = msg.properties.correlationId;
+        debug('listen: ' + options.correlationId);
+        return options;
+      };
 
-    executor.listen = (handler, onError) =>
-      executor.channel.consume(config.queue.name || 'rpc',
-        msg => {
-          let payload;
-          return Promise.resolve(executor.channel.ack(msg))
-          .then(() => {
-            payload = JSON.parse(msg.content.toString());
-            debug('consume', payload);
-            return payload;
-          }).then(handler)
-          .then(response => {
-            const reply = response || {};
-            reply.id = reply.id || payload.id;
-            reply.pts = reply.pts || payload.ts;
-            reply.rts = reply.rts || new Date().toISOString();
-            debug('reply', reply);
-            return executor.channel.sendToQueue(msg.properties.replyTo,
-            new Buffer(JSON.stringify(reply)),
-            buildEmitterOptions(msg));
-          }).catch(onError || (err => {
-            throw err;
-          }));
-        }, _.defaults(config.queue.options.consumer || {
-          durable: false,
-          autoDelete: true,
-          messageTtl: 5000
-        }, {
-          noAck: false
-        })
-      );
-    debug('executor created');
-    return executor;
-  });
+      executor.listen = (handler, onError) =>
+        executor.channel.consume(config.queue.name || 'rpc',
+          msg => {
+            let payload;
+            return Promise.resolve(executor.channel.ack(msg))
+              .then(() => {
+                payload = JSON.parse(msg.content.toString());
+                debug('consume', payload);
+                return payload;
+              }).then(handler)
+              .then(response => {
+                const reply = response || {};
+                reply.id = reply.id || payload.id;
+                reply.pts = reply.pts || payload.ts;
+                reply.rts = reply.rts || new Date().toISOString();
+                debug('reply', reply);
+                return executor.channel.sendToQueue(msg.properties.replyTo,
+                  new Buffer(JSON.stringify(reply)),
+                  buildEmitterOptions(msg));
+              }).catch(onError || (err => {
+                throw err;
+              }));
+          }, _.defaults(config.queue.options.consumer || {
+            durable: false,
+            autoDelete: true,
+            messageTtl: 5000
+          }, {
+            noAck: false
+          })
+        );
+      debug('executor created');
+      return executor;
+    });
 };
 
 module.exports = {
