@@ -23,6 +23,8 @@ a [Remote Procedural Call](https://www.rabbitmq.com/tutorials/tutorial-six-javas
 * [Linting check](#linting-check)
 * [API Reference](#api-reference)
 
+![3-Layer Architecture](http://i.imgur.com/6KbTryk.png)
+
 ## Features
 - Integrates with the **3-layered architecture**:
     * Message Queue Layer [api-node-swagger](https://github.com/Cloudoki/api-node-swagger)
