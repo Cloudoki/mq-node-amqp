@@ -13,6 +13,7 @@
     "test": "rimraf coverage && NODE_ENV=test istanbul cover node_modules/.bin/_mocha -- --reporter dot test/",
     "docs": "rimraf docs && jsdoc -c .jsdocconf -R README.md"
   },
+  "author": "Edgar Ribeiro <edgar@cloudoki.com> (http://cloudoki.com)",
   "dependencies": {
     "amqplib": "^0.4.1",
     "bluebird": "^3.1.1",
@@ -29,5 +30,22 @@
     "mocha": "^2.3.4",
     "mocha-eslint": "^1.0.0",
     "rimraf": "^2.5.0"
-  }
+  },
+  "description": "Message Queue Layer for Node.JS over AMQP",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cloudoki/mq-node-rabbitmq.git"
+  },
+  "keywords": [
+    "mq",
+    "rabbitmq"
+  ],
+  "bugs": {
+    "url": "https://github.com/Cloudoki/mq-node-rabbitmq/issues"
+  },
+  "homepage": "https://github.com/Cloudoki/mq-node-rabbitmq#readme",
+  "license": "ISC"
 }
